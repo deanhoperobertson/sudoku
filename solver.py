@@ -16,18 +16,56 @@ df2 = pd.DataFrame(np.array([["", "", 7,5,"",9,"",3,""],
 
 
 def get_row(df,row):
+    """
+    Fetches all the numbers in a given row
+
+    Args:
+        df: (pandas.Dataframe) sudoku dataframe
+        row: (int) row number
+
+    Returns:
+       list: all the numbers in a row
+    """
     list_ = list(set(df.loc[row]))
     return [int(i) for i in list_ if i !=""]
 
 def get_column(df,col):
+    """
+    Fetches all the numbers in a given column
+
+    Args:
+        df: (pandas.Dataframe) sudoku dataframe
+        col: (int) column number
+
+    Returns:
+       list: all the numbers in a column
+    """
     list_ = list(df[col])
     return [int(i) for i in list_ if i !=""]
 
 def roundup(x):
+    '''
+    Rounds down coordonate the closest block limit
+
+    Args:
+        x: (int) input coordinate
+
+    Returns:
+        int: rouded down value
+    '''
     if x ==1 : return 3
     else:  return int(math.ceil(x / 3.0)) * 3
 
 def rounddown(x):
+    '''
+    Rounds up coordonate the closest block limit
+
+    Args:
+        x: (int) input coordinate
+
+    Returns:
+        int: rouded up value
+    '''
     if x%3 ==0: return x-2
     else: 
         val = round(x - (x%3.5))
@@ -35,6 +73,17 @@ def rounddown(x):
         else: return val
 
 def get_block(df,row,col):
+    '''
+    Fetches all the numbers in a given 3x3 block
+
+    Args:
+        df: (pandas.Dataframe) sudoku dataframe
+        row: (int) row number
+        col: (int) col number
+
+    Returns:
+        list: all the numbers in a block
+    '''
     output=[]
     for c in range(rounddown(col),roundup(col)+1):
         for r in range(rounddown(row),roundup(row)+1):
@@ -42,53 +91,124 @@ def get_block(df,row,col):
     return [int(i) for i in output if i !=""]
 
 def get_options(x,y,z):
+    '''
+    Find the number of missing values from 3 lists
+
+    Args:
+        x: (list) list A
+        y: list) list B
+        z: (list) list C
+
+    Returns:
+        int: number of missing values
+    '''
     x.extend(y)
     x.extend(z)
     in_play = list(set(x))
     options = [i for i in range(1,10) if i not in in_play]
     return len(options)
 
-def options_finder(df,row,col):
-    if df[col][row] !="":
-        return None
-    else:
-        return get_options(get_row(df,row),get_column(df,col),get_block(df,row,col))
-    
 def get_options_2(x,y,z):
+    '''
+    Find the missing values from 3 lists
+
+    Args:
+        x: (list) list A
+        y: list) list B
+        z: (list) list C
+
+    Returns:
+        list: missing values
+    '''
     x.extend(y)
     x.extend(z)
     in_play = list(set(x))
     options = [i for i in range(1,10) if i not in in_play]
     return options
+
+def options_finder(df,row,col):
+    '''
+    Find the missing values at a specific coordinate
+
+    Args:
+        df: (pandas.Dataframe) sudoku dataframe
+        row: (int) row number
+        col: (int) col number
+
+    Returns:
+        int: number of potential values at gint point
+
+    '''
+    if df[col][row] !="":
+        return None
+    else:
+        return get_options(get_row(df,row),get_column(df,col),get_block(df,row,col))
     
 def fetch_value(df,row,col):
+    '''
+    Find the value at specific coordinate
+
+    Args:
+        df: (pandas.Dataframe) sudoku dataframe
+        row: (int) row number
+        col: (int) col number
+
+    Returns:
+        int: value
+    '''
     if df[col][row] !="":
         return None
     else:
         return get_options_2(get_row(df,row),get_column(df,col),get_block(df,row,col))[0]
 
 def create_options_df(df):
+    '''
+    Create value options matrix
+
+    Args:
+        df: (pandas.Dataframe) sudoku dataframe
+
+    Returns:
+        dataframe: matrix with options in each cell
+    '''
+
     df_output = pd.DataFrame(index=[i for i in range(1,10)], columns=[i for i in range(1,10)])
     for row in range(1,10):
         for col in range(1,10):
             df_output[col][row]=options_finder(df,row,col)
     return df_output
 
-def location_finder(df,value):
+def location_finder(df):
+    '''
+    Find the location of cells whihc has only 1 possible option
+
+    Args:
+        df: (pandas.Dataframe) sudoku dataframe
+
+    Returns:
+        list: coordinates of cells
+    '''
     output = []
     for row in range(1,10):
         for col in range(1,10):
-            if df[col][row] ==value:
+            if df[col][row] ==1:
                 output.append([row,col])
     return output
 
-
-# Solving function
-
 def solve(df):
+    '''
+    Solves the sudoku puzzle
+
+    Args:
+        df: (pandas.Dataframe) sudoku dataframe
+
+    Returns:
+        df: solved puzzle
+    '''
+
     action = True
     while action == True:
-        coords=location_finder(create_options_df(df),1)
+        coords=location_finder(create_options_df(df))
         if coords:
             for i in coords:
                 row = i[0]
