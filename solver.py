@@ -14,35 +14,6 @@ df2 = pd.DataFrame(np.array([["", "", 7,5,"",9,"",3,""],
                    columns=[i for i in range(1,10)],
                    index=[i for i in range(1,10)])
 
-
-def get_row(df,row):
-    """
-    Fetches all the numbers in a given row
-
-    Args:
-        df: (pandas.Dataframe) sudoku dataframe
-        row: (int) row number
-
-    Returns:
-       list: all the numbers in a row
-    """
-    list_ = list(set(df.loc[row]))
-    return [int(i) for i in list_ if i !=""]
-
-def get_column(df,col):
-    """
-    Fetches all the numbers in a given column
-
-    Args:
-        df: (pandas.Dataframe) sudoku dataframe
-        col: (int) column number
-
-    Returns:
-       list: all the numbers in a column
-    """
-    list_ = list(df[col])
-    return [int(i) for i in list_ if i !=""]
-
 def roundup(x):
     '''
     Rounds down coordonate the closest block limit
@@ -90,42 +61,6 @@ def get_block(df,row,col):
             output.append(df2[c][r])
     return [int(i) for i in output if i !=""]
 
-def get_options(x,y,z):
-    '''
-    Find the number of missing values from 3 lists
-
-    Args:
-        x: (list) list A
-        y: list) list B
-        z: (list) list C
-
-    Returns:
-        int: number of missing values
-    '''
-    x.extend(y)
-    x.extend(z)
-    in_play = list(set(x))
-    options = [i for i in range(1,10) if i not in in_play]
-    return len(options)
-
-def get_options_2(x,y,z):
-    '''
-    Find the missing values from 3 lists
-
-    Args:
-        x: (list) list A
-        y: list) list B
-        z: (list) list C
-
-    Returns:
-        list: missing values
-    '''
-    x.extend(y)
-    x.extend(z)
-    in_play = list(set(x))
-    options = [i for i in range(1,10) if i not in in_play]
-    return options
-
 def options_finder(df,row,col):
     '''
     Find the missing values at a specific coordinate
@@ -142,7 +77,15 @@ def options_finder(df,row,col):
     if df[col][row] !="":
         return None
     else:
-        return get_options(get_row(df,row),get_column(df,col),get_block(df,row,col))
+        rows = [int(i) for i in list(set(df.loc[row])) if i !=""]
+        cols = [int(i) for i in list(df[col]) if i !=""]
+        block = get_block(df,row,col)
+        
+        rows.extend(cols)
+        rows.extend(block)
+        options = [i for i in range(1,10) if i not in list(set(rows))]
+        return len(options)
+
     
 def fetch_value(df,row,col):
     '''
@@ -159,7 +102,14 @@ def fetch_value(df,row,col):
     if df[col][row] !="":
         return None
     else:
-        return get_options_2(get_row(df,row),get_column(df,col),get_block(df,row,col))[0]
+        rows = [int(i) for i in list(set(df.loc[row])) if i !=""]
+        cols = [int(i) for i in list(df[col]) if i !=""]
+        block = get_block(df,row,col)
+        
+        rows.extend(cols)
+        rows.extend(block)
+        options = [i for i in range(1,10) if i not in list(set(rows))]
+        return options[0]
 
 def create_options_df(df):
     '''
@@ -205,7 +155,6 @@ def solve(df):
     Returns:
         df: solved puzzle
     '''
-
     action = True
     while action == True:
         coords=location_finder(create_options_df(df))
